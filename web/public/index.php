@@ -127,9 +127,29 @@ if ($action === 'stats' && isset($_SESSION['id'])) {
 	}
 }
 
+// Characteristics: game stat id => [label, icon, world_players column]
+const CHARACTERISTICS = [11 => ['Vitalidad', '❤️', 'vitalite'], 12 => ['Sabiduría', '🦉', 'sagesse'], 10 => ['Fuerza', '🟤', 'force'],
+	15 => ['Inteligencia', '🔥', 'intelligence'], 13 => ['Suerte', '💧', 'chance'], 14 => ['Agilidad', '🌪️', 'agilite']];
+if (in_array($action, ['reset', 'boost'], true) && isset($_SESSION['id'])) {
+	$charId = (int)($_POST['char'] ?? 0);
+	$stat = (int)($_POST['stat'] ?? 0);
+	$amount = (int)($_POST['amount'] ?? 0);
+	$q = $login->prepare('SELECT COUNT(*) FROM world_players WHERE id = ? AND account = ?');
+	$q->execute([$charId, $_SESSION['id']]);
+	if (!$q->fetchColumn()) $msg = 'Personaje no encontrado.';
+	elseif ($action === 'boost' && (!isset(CHARACTERISTICS[$stat]) || $amount < 1 || $amount > 2000)) $msg = 'Indica cuántos puntos quieres subir (1 a 2000).';
+	else {
+		try {
+			$login->prepare('INSERT INTO web_player_edits(player_id, action, stat, amount) VALUES (?, ?, ?, ?)')->execute([$charId, $action, $stat, $amount]);
+			$ok = true;
+			$msg = $action === 'reset' ? 'Reinicio enviado: el juego te devuelve el capital en unos segundos.' : 'Puntos enviados: el juego los aplica en unos segundos con el coste de tu clase.';
+		} catch (PDOException $ex) { $msg = 'El servidor del juego todavía no está listo para recibir cambios. Inténtalo en un minuto.'; }
+	}
+}
+
 $players = [];
 if (isset($_SESSION['id'])) {
-	$q = $login->prepare('SELECT id, name, class, level FROM world_players WHERE account = ? ORDER BY level DESC');
+	$q = $login->prepare('SELECT id, name, class, level, capital, vitalite, sagesse, `force`, intelligence, chance, agilite FROM world_players WHERE account = ? ORDER BY level DESC');
 	$q->execute([$_SESSION['id']]);
 	$players = $q->fetchAll(PDO::FETCH_ASSOC);
 
@@ -145,6 +165,12 @@ if (isset($_SESSION['id'])) {
 		uasort($objects, fn($a, $b) => [$a['position'] == -1, $EQUIP[$a['type']], $a['name']] <=> [$b['position'] == -1, $EQUIP[$b['type']], $b['name']]);
 	}
 	$editing = $objects[(int)($_GET['item'] ?? 0)] ?? null;
+	$char = null;
+	foreach ($players as $p) if ($p['id'] == (int)($_GET['char'] ?? 0)) $char = $p;
+	if ($char) {
+		try { $q = $login->prepare('SELECT COUNT(*) FROM web_player_edits WHERE player_id = ?'); $q->execute([$char['id']]); $char['pending'] = $q->fetchColumn() > 0; }
+		catch (PDOException $ex) { $char['pending'] = false; }
+	}
 	$pending = false;
 	if ($editing) {
 		try { $q = $login->prepare('SELECT COUNT(*) FROM web_item_edits WHERE object_id = ?'); $q->execute([$editing['id']]); $pending = $q->fetchColumn() > 0; }
@@ -210,12 +236,13 @@ function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES); }
 		<p>Todavía no tienes personajes. Créalos desde el juego.</p>
 	<?php else: ?>
 	<table>
-		<tr><th>Personaje</th><th>Clase</th><th>Nivel</th><th>Cambiar nombre</th></tr>
+		<tr><th>Personaje</th><th>Clase</th><th>Nivel</th><th></th><th>Cambiar nombre</th></tr>
 		<?php foreach ($players as $p): ?>
 		<tr>
 			<td><?= e($p['name']) ?></td>
 			<td><?= e(CLASSES[$p['class']] ?? '?') ?></td>
 			<td><?= (int)$p['level'] ?></td>
+			<td><a href="?char=<?= (int)$p['id'] ?>">Características</a></td>
 			<td><form method="post"><input type="hidden" name="action" value="rename"><input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
 				<input name="name" maxlength="20" placeholder="Nuevo nombre" required aria-label="Nuevo nombre para <?= e($p['name']) ?>"><button>OK</button></form></td>
 		</tr>
@@ -224,7 +251,52 @@ function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES); }
 	<?php endif; ?>
 </section>
 
-<?php if ($editing): [$iname, $itype, $igfx] = itemInfo($editing['template']); $cur = parseStats($editing['stats']); ?>
+<?php if ($char): $costs = json_decode(file_get_contents(__DIR__ . '/data/boost_costs.json'), true)[$char['class']] ?? []; ?>
+<section id="chars">
+	<a href="./" style="float:right">← Volver</a>
+	<h2><?= e($char['name']) ?> · Características</h2>
+	<p>Capital disponible: <b id="capital"><?= (int)$char['capital'] ?></b> puntos</p>
+	<?php if ($char['pending']): ?><p class="msg">Hay un cambio pendiente. Recarga la página en unos segundos.</p><?php endif; ?>
+	<table>
+		<tr><th></th><th>Stat</th><th>Base</th><th>Coste actual</th><th>Subir</th></tr>
+		<?php foreach (CHARACTERISTICS as $id => [$label, $icon, $col]): ?>
+		<tr>
+			<td class="ico"><?= $icon ?></td><td><?= $label ?></td><td><?= (int)$char[$col] ?></td>
+			<td><span class="cost" data-tiers='<?= json_encode($costs[$id] ?? [[0, 1]]) ?>' data-base="<?= (int)$char[$col] ?>"></span></td>
+			<td><form method="post"><input type="hidden" name="action" value="boost"><input type="hidden" name="char" value="<?= (int)$char['id'] ?>"><input type="hidden" name="stat" value="<?= $id ?>">
+				<input type="number" name="amount" min="1" max="2000" placeholder="+" style="width:80px" aria-label="Puntos de <?= $label ?>"><button>OK</button></form>
+				<small class="need"></small></td>
+		</tr>
+		<?php endforeach; ?>
+	</table>
+	<p><small>Los costes son los del juego para <?= e(CLASSES[$char['class']] ?? '?') ?>. Si el personaje está conectado, los valores de aquí pueden ir hasta 20 min por detrás; el juego siempre usa los reales.</small></p>
+	<form method="post" onsubmit="return confirm('¿Reiniciar las características de <?= e($char['name']) ?>? Se devuelve todo el capital (los pergaminos se mantienen).')">
+		<input type="hidden" name="action" value="reset"><input type="hidden" name="char" value="<?= (int)$char['id'] ?>">
+		<button style="background:#b5523b;color:#fff">Reiniciar características</button>
+	</form>
+</section>
+<script>
+// Capital needed to add n points from base, using the game's cost tiers [[fromValue, cost], ...]
+function costOf(tiers, base, n) {
+	let total = 0;
+	for (let v = base; v < base + n; v++) total += tiers.filter(t => t[0] <= v).pop()[1];
+	return total;
+}
+const capital = +document.getElementById('capital').textContent;
+for (const row of document.querySelectorAll('#chars tr')) {
+	const cost = row.querySelector('.cost'); if (!cost) continue;
+	const tiers = JSON.parse(cost.dataset.tiers), base = +cost.dataset.base;
+	cost.textContent = costOf(tiers, base, 1) + ' por punto';
+	const input = row.querySelector('input[name=amount]'), need = row.querySelector('.need'), btn = row.querySelector('button');
+	input.addEventListener('input', () => {
+		const n = +input.value || 0, c = costOf(tiers, base, n);
+		need.textContent = n ? `Cuesta ${c} de capital` : '';
+		need.style.color = c > capital ? '#e07a6a' : '#aaa';
+		btn.disabled = c > capital;
+	});
+}
+</script>
+<?php elseif ($editing): [$iname, $itype, $igfx] = itemInfo($editing['template']); $cur = parseStats($editing['stats']); ?>
 <section>
 	<a href="./" style="float:right">← Volver</a>
 	<h2><?= e($iname) ?></h2>

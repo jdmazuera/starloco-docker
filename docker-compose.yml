@@ -111,7 +111,7 @@ services:
       dockerfile: Dockerfile
       args:
         STARLOCO_GAME_REPO: ${STARLOCO_GAME_REPO:-https://github.com/jdmazuera/StarLoco-Game.git}
-        STARLOCO_GAME_REF: ${STARLOCO_GAME_REF:-v1.0.6-crafting.2}
+        STARLOCO_GAME_REF: ${STARLOCO_GAME_REF:-v1.0.6-crafting.3}
         STARLOCO_GAME_JAR: ${STARLOCO_GAME_JAR:-game.jar}
     container_name: game
     restart: unless-stopped
