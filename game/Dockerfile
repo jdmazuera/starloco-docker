@@ -5,7 +5,7 @@ RUN apk add --no-cache bash curl git netcat-openbsd mariadb-client
 WORKDIR /app
 
 ARG STARLOCO_GAME_REPO=https://github.com/jdmazuera/StarLoco-Game.git
-ARG STARLOCO_GAME_REF=v1.0.6-crafting.3
+ARG STARLOCO_GAME_REF=v1.0.6-crafting.4
 ARG STARLOCO_GAME_JAR=game.jar
 RUN mkdir -p config data scripts/data scripts/models && \
     git clone --depth 1 --branch ${STARLOCO_GAME_REF} ${STARLOCO_GAME_REPO} /tmp/starloco-game && \

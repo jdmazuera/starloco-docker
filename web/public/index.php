@@ -97,6 +97,26 @@ function parseStats($str) {
 	return $out;
 }
 
+// On-hit weapon effects (game: Constant.isWeaponEffect) => label
+const WEAPON_EFFECTS = [
+	100 => '⚪ Daño neutral', 97 => '🟤 Daño tierra', 99 => '🔥 Daño fuego', 96 => '💧 Daño agua', 98 => '🌪️ Daño aire',
+	95 => '⚪ Robo de vida neutral', 92 => '🟤 Robo de vida tierra', 94 => '🔥 Robo de vida fuego', 91 => '💧 Robo de vida agua', 93 => '🌪️ Robo de vida aire',
+	108 => '💚 Cura al lanzador (PDV devueltos)', 81 => '💚 Cura (PDV devueltos)', 101 => '⭐ Quita PA al objetivo', 84 => '⭐ Roba PA',
+	127 => '👣 Quita PM al objetivo', 130 => '💰 Roba kamas'];
+const WEAPON_TYPES = [2, 3, 4, 5, 6, 7, 8, 19, 20, 21, 22, 102, 114];
+// "64#9#11#0#1d9+8,..." => [[effectId, min, max], ...] in item order
+function parseWeaponLines($str, $type) {
+	$out = [];
+	foreach (explode(',', (string)$str) as $line) {
+		$p = explode('#', $line);
+		if (count($p) < 3 || !preg_match('/^[0-9a-f]+$/i', $p[0])) continue;
+		$id = hexdec($p[0]);
+		if (!isset(WEAPON_EFFECTS[$id]) || in_array($id, [81, 84, 127, 130]) && !in_array($type, WEAPON_TYPES)) continue; // on other items 127 is a -MP malus
+		$min = hexdec($p[1]); $out[] = [$id, $min, max($min, hexdec($p[2]))]; // fixed values store max = 0
+	}
+	return $out;
+}
+
 if ($action === 'stats' && isset($_SESSION['id'])) {
 	$objectId = (int)($_POST['object'] ?? 0);
 	$q = $login->prepare('SELECT template, stats FROM world_objects WHERE id = ?');
@@ -106,17 +126,31 @@ if ($action === 'stats' && isset($_SESSION['id'])) {
 	if ($current === false || !isset(ownedItems($login, $_SESSION['id'])[$objectId])) $msg = 'Ese objeto no está en tus personajes.';
 	elseif (!isset($EQUIP[itemInfo($row['template'])[1]])) $msg = 'Solo se pueden editar objetos de equipo.';
 	else {
+		$currentLines = parseWeaponLines($current, itemInfo($row['template'])[1]);
 		$current = parseStats($current);
 		$wanted = [];
 		foreach ((array)($_POST['value'] ?? []) as $id => $v) if (isset($current[(int)$id]) && empty($_POST['remove'][$id])) $wanted[(int)$id] = (int)$v;
-		$newId = (int)($_POST['new_stat'] ?? 0);
-		if ($newId && isset($STATS[$newId])) $wanted[$newId] = (int)($_POST['new_value'] ?? 0);
+		foreach ((array)($_POST['new_stat'] ?? []) as $k => $newId)
+			if (isset($STATS[(int)$newId])) $wanted[(int)$newId] = (int)($_POST['new_value'][$k] ?? 0);
 		$diff = [];
 		foreach ($wanted as $id => $v) {
 			if ($v < 1 || $v > 9999) { $msg = 'Los valores deben estar entre 1 y 9999.'; break; }
 			if (($current[$id] ?? null) !== $v) $diff[] = "$id:$v";
 		}
 		foreach ($current as $id => $v) if (!isset($wanted[$id])) $diff[] = "$id:0"; // 0 = remove
+
+		// weapon damage lines (existing rows + one optional new row), sent as a whole: W=id,min,max|...
+		$lines = [];
+		foreach ((array)($_POST['w'] ?? []) as $i => $l) {
+			if (!empty($l['remove']) || (str_starts_with((string)$i, 'new') && ($l['id'] ?? '') === '')) continue;
+			$min = (int)($l['min'] ?? 0); $max = (int)($l['max'] ?? 0);
+			if (!isset(WEAPON_EFFECTS[(int)($l['id'] ?? 0)]) || $min < 1 || $max > 9999 || $max < $min) {
+				$msg = 'Cada efecto del arma necesita un tipo y un rango válido (mínimo ≥ 1 y máximo ≥ mínimo).'; break;
+			}
+			$lines[] = [(int)$l['id'], $min, $max];
+		}
+		if ($lines != $currentLines && isset($_POST['w']))
+			$diff[] = 'W=' . implode('|', array_map(fn($l) => "$l[0],$l[1],$l[2]", $lines));
 		if (!$msg && !$diff) $msg = 'No cambiaste nada.';
 		elseif (!$msg) {
 			try {
@@ -318,16 +352,47 @@ for (const row of document.querySelectorAll('#chars tr')) {
 			<?php if (!$cur): ?><tr><td colspan="4">Este objeto no tiene stats.</td></tr><?php endif; ?>
 		</table>
 		<div class="add">
-			<select name="new_stat" aria-label="Añadir stat"><option value="">+ Añadir stat…</option>
+			<select name="new_stat[]" aria-label="Añadir stat"><option value="">+ Añadir stat…</option>
 				<?php foreach ($STATS as $id => [$icon, $text]): if (isset($cur[$id])) continue; ?>
 				<option value="<?= $id ?>"><?= $icon ?> <?= e(str_replace('#', 'X', $text)) ?></option>
 				<?php endforeach; ?>
 			</select>
-			<input type="number" name="new_value" min="1" max="9999" placeholder="X" style="width:90px" aria-label="Valor de la stat nueva">
+			<input type="number" name="new_value[]" min="1" max="9999" placeholder="X" style="width:90px" aria-label="Valor de la stat nueva">
 		</div>
+		<?php $wl = parseWeaponLines($editing['stats'], $itype); if ($wl || in_array($itype, WEAPON_TYPES)): ?>
+		<h3>Efectos al golpear</h3>
+		<table>
+			<tr><th>Efecto</th><th>Mín</th><th>Máx</th><th>Quitar</th></tr>
+			<?php foreach (array_merge($wl, [['', '', '']]) as $i => [$wid, $min, $max]): $key = $i < count($wl) ? $i : 'new0'; ?>
+			<tr>
+				<td><select name="w[<?= $key ?>][id]" aria-label="Efecto"><?php if ($key === 'new0'): ?><option value="">+ Añadir efecto…</option><?php endif; ?>
+					<?php foreach (WEAPON_EFFECTS as $id => $label): ?><option value="<?= $id ?>"<?= $id === $wid ? ' selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></td>
+				<td><input type="number" name="w[<?= $key ?>][min]" value="<?= $min ?>" min="1" max="9999" style="width:70px" aria-label="Mínimo"></td>
+				<td><input type="number" name="w[<?= $key ?>][max]" value="<?= $max ?>" min="1" max="9999" style="width:70px" aria-label="Máximo"></td>
+				<td><?php if ($key !== 'new0'): ?><input type="checkbox" name="w[<?= $key ?>][remove]" value="1" style="width:auto" aria-label="Quitar efecto"><?php endif; ?></td>
+			</tr>
+			<?php endforeach; ?>
+		</table>
+		<?php endif; ?>
 		<button>Guardar cambios</button>
 	</form>
 </section>
+<script>
+let added = 0;
+document.addEventListener('change', e => {
+	const sel = e.target;
+	const row = sel.closest('.add, tr');
+	const isStat = sel.name === 'new_stat[]', isEffect = /^w\[new\d+\]\[id\]$/.test(sel.name);
+	if (!row || !(isStat || isEffect) || !sel.value || row.dataset.cloned) return;
+	row.dataset.cloned = '1';
+	const copy = row.cloneNode(true);
+	delete copy.dataset.cloned;
+	copy.querySelectorAll('input').forEach(i => i.value = '');
+	copy.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+	if (isEffect) { const key = 'new' + (++added); copy.querySelectorAll('[name]').forEach(el => el.name = el.name.replace(/new\d+/, key)); }
+	row.after(copy);
+});
+</script>
 <script>window.RufflePlayer = window.RufflePlayer || {}; window.RufflePlayer.config = { splashScreen: false, unmuteOverlay: 'hidden', contextMenu: 'off', backgroundColor: '#2b2720' };</script>
 <script src="https://cdn.jsdelivr.net/npm/@ruffle-rs/ruffle@0.8.0-nightly.2026.11.8/ruffle.js"></script>
 <?php elseif ($objects): ?>
