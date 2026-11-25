@@ -74,12 +74,12 @@ system.server.game.rate.honor ${RATE_HONOR:-1}
 system.server.game.rate.kamas ${RATE_KAMAS:-1}
 system.server.game.rate.job ${RATE_JOB:-1}
 system.server.game.rate.fm ${RATE_FM:-1}
-system.server.game.start.message Welcome to StarLoco !
+system.server.game.start.message Usted es gay y si es gay, ahora es hetero !
 system.server.game.start.level 1
 system.server.game.start.kamas 0
 system.server.game.start.map -1
 system.server.game.start.cell -1
-system.server.game.limitByIp 8
+system.server.game.limitByIp 100000
 system.server.game.subscription false
 system.server.game.autoReboot false
 system.server.game.resetLimit true

@@ -102,14 +102,16 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    stdin_open: true
+    tty: true
 
   game:
     build:
       context: ./game
       dockerfile: Dockerfile
       args:
-        STARLOCO_GAME_REPO: ${STARLOCO_GAME_REPO:-https://github.com/StarLoco/StarLoco-Game.git}
-        STARLOCO_GAME_REF: ${STARLOCO_GAME_REF:-v1.0.6}
+        STARLOCO_GAME_REPO: ${STARLOCO_GAME_REPO:-https://github.com/jdmazuera/StarLoco-Game.git}
+        STARLOCO_GAME_REF: ${STARLOCO_GAME_REF:-v1.0.6-crafting.1}
         STARLOCO_GAME_JAR: ${STARLOCO_GAME_JAR:-game.jar}
     container_name: game
     restart: unless-stopped
