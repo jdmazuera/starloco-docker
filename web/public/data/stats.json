@@ -1,0 +1,322 @@
+{
+"110": [
+"💗",
+"+# a la vida"
+],
+"111": [
+"⭐",
+"+# PA"
+],
+"112": [
+"⚔️",
+"+# a los daños"
+],
+"115": [
+"💥",
+"+# a los golpes críticos"
+],
+"116": [
+"🎯",
+"-# al alcance"
+],
+"117": [
+"🎯",
+"+# al alcance"
+],
+"118": [
+"🟤",
+"+# a la fuerza"
+],
+"119": [
+"🌪️",
+"+# a la agilidad"
+],
+"121": [
+"⚔️",
+"+# a los daños"
+],
+"122": [
+"💀",
+"+# a los fallos críticos"
+],
+"123": [
+"💧",
+"+# a la suerte"
+],
+"124": [
+"🦉",
+"+# a la sabiduría"
+],
+"125": [
+"❤️",
+"+# a la vitalidad"
+],
+"126": [
+"🔥",
+"+# a la inteligencia"
+],
+"128": [
+"👣",
+"+# PM"
+],
+"138": [
+"📈",
+"Aumenta los daños en un #%"
+],
+"145": [
+"⚔️",
+"-# a los daños"
+],
+"152": [
+"💧",
+"-# a la suerte"
+],
+"153": [
+"❤️",
+"-# a la vitalidad"
+],
+"154": [
+"🌪️",
+"-# a la agilidad"
+],
+"155": [
+"🔥",
+"-# a la inteligencia"
+],
+"156": [
+"🦉",
+"-# a la sabiduría"
+],
+"157": [
+"🟤",
+"-# a la fuerza"
+],
+"158": [
+"🎒",
+"Permite cargar # pods más"
+],
+"159": [
+"🎒",
+"Reduce en # los pods que puedes cargar"
+],
+"160": [
+"🛡️",
+"+#% de probabilidades de evitar pérdidas de PA"
+],
+"161": [
+"🛡️",
+"+#% de probabilidades de evitar pérdidas de PM"
+],
+"162": [
+"🛡️",
+"-#% de probabilidades de evitar pérdidas de PA"
+],
+"163": [
+"🛡️",
+"-#% de probabilidades de evitar pérdidas de PM"
+],
+"168": [
+"⭐",
+"-# PA"
+],
+"169": [
+"👣",
+"-# PM"
+],
+"171": [
+"💥",
+"-# a los golpes críticos"
+],
+"174": [
+"⚡",
+"+# a la iniciativa"
+],
+"175": [
+"⚡",
+"-# a la iniciativa"
+],
+"176": [
+"🍀",
+"+# a la prospección"
+],
+"177": [
+"🍀",
+"-# a la prospección"
+],
+"178": [
+"✚",
+"+# a las curaciones"
+],
+"179": [
+"✚",
+"-# a las curas"
+],
+"182": [
+"👾",
+"+# criaturas invocables"
+],
+"183": [
+"🛡️",
+"Reducción mágica de #"
+],
+"184": [
+"🛡️",
+"Reducción física de #"
+],
+"186": [
+"📉",
+"Disminuye los daños en un #%"
+],
+"210": [
+"🟤",
+"#% de resistencia a la tierra"
+],
+"211": [
+"💧",
+"#% de resistencia al agua"
+],
+"212": [
+"🌪️",
+"#% de resistencia al aire"
+],
+"213": [
+"🔥",
+"#% de resistencia al fuego"
+],
+"214": [
+"⚪",
+"#% de resistencia neutral"
+],
+"215": [
+"🟤",
+"#% de debilidad a la tierra"
+],
+"216": [
+"💧",
+"#% de debilidad al agua"
+],
+"217": [
+"🌪️",
+"#% de debilidad al aire"
+],
+"218": [
+"🔥",
+"#% de debilidad al fuego"
+],
+"219": [
+"⚪",
+"#% de debilidad neutral"
+],
+"220": [
+"🔄",
+"Reenvía # daños"
+],
+"225": [
+"🪤",
+"+# a los daños con las trampas"
+],
+"226": [
+"🪤",
+"+#% de daños con las trampas"
+],
+"240": [
+"🟤",
+"+# a la resistencia a la tierra"
+],
+"241": [
+"💧",
+"+# a la resistencia al agua"
+],
+"242": [
+"🌪️",
+"+# a la resistencia al aire"
+],
+"243": [
+"🔥",
+"+# a la resistencia al fuego"
+],
+"244": [
+"⚪",
+"+# a la resistencia neutral"
+],
+"245": [
+"🟤",
+"-# a la resistencia a la tierra"
+],
+"246": [
+"💧",
+"-# a la resistencia al agua"
+],
+"247": [
+"🌪️",
+"-# a la resistencia al aire"
+],
+"248": [
+"🔥",
+"-# a la resistencia al fuego"
+],
+"249": [
+"⚪",
+"-# a la resistencia neutral"
+],
+"250": [
+"🟤",
+"#% de res. tierra en JcJ"
+],
+"251": [
+"💧",
+"#% de res. agua en JcJ"
+],
+"252": [
+"🌪️",
+"#% de res. aire en JcJ"
+],
+"253": [
+"🔥",
+"#% de res. fuego en JcJ"
+],
+"254": [
+"⚪",
+"#% de res. neutral en JcJ"
+],
+"255": [
+"🟤",
+"#% de debilidad tierra en JcJ"
+],
+"256": [
+"💧",
+"#% de debilidad agua en JcJ"
+],
+"257": [
+"🌪️",
+"#% de debilidad aire en JcJ"
+],
+"258": [
+"🔥",
+"#% de debilidad fuego en JcJ"
+],
+"259": [
+"⚪",
+"#% de debilidad neutral en JcJ"
+],
+"260": [
+"🟤",
+"+# a la res. tierra en JcJ"
+],
+"261": [
+"💧",
+"+# a la res. agua en JcJ"
+],
+"262": [
+"🌪️",
+"+# a la res. aire en JcJ"
+],
+"263": [
+"🔥",
+"+# a la res. fuego en JcJ"
+],
+"264": [
+"⚪",
+"+# a la res. neutral en JcJ"
+]
+}

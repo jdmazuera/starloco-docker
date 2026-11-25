@@ -111,7 +111,7 @@ services:
       dockerfile: Dockerfile
       args:
         STARLOCO_GAME_REPO: ${STARLOCO_GAME_REPO:-https://github.com/jdmazuera/StarLoco-Game.git}
-        STARLOCO_GAME_REF: ${STARLOCO_GAME_REF:-v1.0.6-crafting.1}
+        STARLOCO_GAME_REF: ${STARLOCO_GAME_REF:-v1.0.6-crafting.2}
         STARLOCO_GAME_JAR: ${STARLOCO_GAME_JAR:-game.jar}
     container_name: game
     restart: unless-stopped
@@ -193,6 +193,7 @@ services:
       start_period: 30s
     volumes:
       - ./web/public:/src/public:ro
+      - ./web/dofus/resources/app/retroclient/clips/items:/var/www/dofus/items:ro
       - web_runtime:/runtime
       - ./web/nginx.conf:/etc/nginx/nginx.conf:ro
 
